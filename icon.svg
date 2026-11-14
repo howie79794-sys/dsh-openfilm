@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101418"/>
+      <stop offset="1" stop-color="#1d2733"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#bg)"/>
+  <!-- clapper stripes -->
+  <path d="M10 22 L54 14 L55 20 L11 28 Z" fill="#ffce4d"/>
+  <path d="M18 20.6 L24 19.5 L23 24.4 L17 25.5 Z" fill="#101418"/>
+  <path d="M31 18.4 L37 17.3 L36 22.2 L30 23.3 Z" fill="#101418"/>
+  <path d="M44 16.2 L50 15.1 L49 20 L43 21.1 Z" fill="#101418"/>
+  <!-- body -->
+  <rect x="10" y="27" width="45" height="26" rx="3" fill="#2c3a4a"/>
+  <!-- film reels as play controls -->
+  <circle cx="22" cy="40" r="6.5" fill="none" stroke="#8fb7dd" stroke-width="1.6"/>
+  <circle cx="22" cy="40" r="1.6" fill="#8fb7dd"/>
+  <path d="M22 33.5 L25.8 36.25 M25.8 43.75 L22 46.5 M18.2 43.75 L22 46.5 M18.2 36.25 L22 33.5 M25.8 36.25 L25.8 43.75 M18.2 36.25 L18.2 43.75" stroke="#8fb7dd" stroke-width="1.1" fill="none"/>
+  <!-- play triangle -->
+  <path d="M35 34.5 L47 40 L35 45.5 Z" fill="#ffce4d"/>
+</svg>

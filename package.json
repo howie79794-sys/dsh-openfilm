@@ -1,0 +1,51 @@
+{
+  "name": "dsh-openfilm",
+  "version": "0.5.0",
+  "description": "为 DeepSeek Harness 专属打造的 OpenFilm 视频工坊：源自开源项目 OpenFilm，针对 DSH 深度优化——影片写成 film.html，侧栏内嵌 Studio 实时预览与手改，本地渲染导出 MP4；DSH 原生工具、画板指改、后台渲染任务、支持图片与语音的面板对话。",
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "docs",
+    "own-skills",
+    "icon.svg",
+    "README.md",
+    "README.zh.md",
+    "LICENSE",
+    "test"
+  ],
+  "keywords": [
+    "dsh-plugin",
+    "dsh",
+    "deepseek-harness",
+    "openfilm",
+    "video",
+    "film",
+    "render",
+    "studio"
+  ],
+  "license": "MIT",
+  "engines": {
+    "dsh": ">=0.2.1"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-layout"
+      ]
+    }
+  }
+}
