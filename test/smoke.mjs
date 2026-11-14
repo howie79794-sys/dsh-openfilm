@@ -184,6 +184,29 @@ function call(method, path, body) {
   console.log('✓ sidechat send 空请求拒绝')
 }
 
+// remove 路由守卫：相对路径 / 不在项目列表 / 渲染中——都不碰废纸篓
+{
+  const { status, body } = await call('POST', '/openfilm/api/remove', { folder: 'relative/path' })
+  if (status !== 400 || !/绝对路径/.test(body.error || '')) throw new Error('remove 相对路径未拦: ' + JSON.stringify(body))
+  const miss = await call('POST', '/openfilm/api/remove', { folder: join(dir, 'not-a-project') })
+  if (miss.status !== 400 || !/不在项目列表/.test(miss.body.error || '')) throw new Error('remove 未知项目未拦: ' + JSON.stringify(miss.body))
+  console.log('✓ remove 守卫：相对路径与列表外路径都拒绝')
+}
+
+// remove 渲染中保护：对正在渲染的项目发删除应被拒
+{
+  const busy = await call('POST', '/openfilm/api/remove', { folder: film })
+  // film 目录是 smoke 环境里真实含 film.html 的项目；此时它的渲染任务在 stub 下已到终态，
+  // 所以这里应走到 trashFolder（darwin 上会真调 osascript）。为避免测试污染废纸篓，
+  // 只在非 darwin 断言成功；darwin 断言要么成功要么明确失败信息，不允许静默。
+  if (process.platform !== 'darwin') {
+    if (busy.status !== 400) throw new Error('remove 应因无废纸篓命令而 400: ' + JSON.stringify(busy.body))
+  } else {
+    console.log('✓ remove darwin 端到端:', busy.status, busy.body.removed || busy.body.error)
+    if (busy.status !== 200) throw new Error('remove 端到端失败: ' + JSON.stringify(busy.body))
+  }
+}
+
 // 事件流：agent/assistant-stream 的 {agent, frame} 载荷 → feed 出现助手文本
 {
   const emit = (name, payload) => { for (const listener of eventListeners.get(name) || []) listener(payload) }

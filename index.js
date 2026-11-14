@@ -629,6 +629,41 @@ export async function apply(ctx, rawConfig) {
     return { projects: listProjects(cfg).map((entry) => ({ id: entry.id, name: basename(entry.path), path: entry.path, openedAt: entry.openedAt, recent: entry.recent })) }
   }
 
+  // ── 删除项目：整文件夹移入系统废纸篓（可恢复），只删真实项目 ──
+  /** 把绝对路径移入系统废纸篓；平台命令缺失则失败，绝不静默 rm。 */
+  function trashFolder(path) {
+    const run = (command, args) => new Promise((resolveRun, rejectRun) => {
+      const child = spawn(command, args, { stdio: 'ignore' })
+      child.on('error', (error) => rejectRun(new Error(`${command} 不可用：${error.message}`)))
+      child.on('exit', (code) => { if (code === 0) resolveRun(); else rejectRun(new Error(`${command} 退出码 ${code}`)) })
+    })
+    if (process.platform === 'darwin') {
+      // Finder 的删除 = 移入废纸篓；AppleScript 字符串转义与 JSON 双引号串兼容
+      return run('osascript', ['-e', `tell application "Finder" to delete (POSIX file ${JSON.stringify(path)} as alias)`])
+    }
+    if (process.platform === 'linux') return run('gio', ['trash', path])
+    if (process.platform === 'win32') {
+      const escaped = path.replace(/'/g, "''")
+      return run('powershell', ['-NoProfile', '-Command',
+        `Add-Type -AssemblyName Microsoft.VisualBasic; [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory('${escaped}','OnlyErrorDialogs','SendToRecycleBin')`])
+    }
+    return Promise.reject(new Error('当前系统不支持移入废纸篓，请手动删除项目文件夹'))
+  }
+
+  async function opRemove(payload) {
+    const folder = String(payload.folder || '')
+    if (!isAbsolute(folder)) throw new Error('folder 要用绝对路径')
+    const project = findProject(folder, cfg)
+    if (!project) throw new Error(`不在项目列表里，无法删除：${folder}`)
+    for (const record of renderRecords.values()) {
+      if (record.project === project.path && (record.state === 'running' || record.state === 'cancelling')) {
+        throw new Error('该项目正在渲染，先停止渲染再删除')
+      }
+    }
+    await trashFolder(project.path)
+    return { removed: project.path, trashed: true }
+  }
+
   // ── 模型工具 ──
   const params = {
     type: 'object',
@@ -811,6 +846,9 @@ export async function apply(ctx, rawConfig) {
             }
             if (rest === 'reveal') {
               return sendJson(res, 200, { ok: true, ...opReveal(body) })
+            }
+            if (rest === 'remove') {
+              return sendJson(res, 200, { ok: true, ...(await opRemove(body)) })
             }
             if (rest === 'sidechat/send') {
               const text = typeof body.text === 'string' ? body.text.trim() : ''

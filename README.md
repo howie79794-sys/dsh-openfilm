@@ -9,6 +9,7 @@ This plugin originates from the open-source project [OpenFilm](https://www.npmjs
 ## What it does
 
 - **`openfilm` tool (model-callable)** — environment check, open/create projects, project list, film self-check (`look`), canvas read/apply, background render, render status.
+- **Project management in the sidebar panel** — delete a project with a confirmation dialog; the folder goes to the system Trash, recoverable anytime.
 - **Embedded Studio in the DSH sidebar** — watch the film live and hand-edit anything at any moment, without leaving DSH.
 - **Canvas pointing ("point and say")** — say things like "the note labeled 开场 on the canvas" or "the shot at second 8" in your DSH chat; the agent matches canvas nodes by text/ID and edits them precisely, and Studio reflects the change immediately.
 - **Render jobs in the DSH task panel** — rendering shows up as a DSH background job with logs, progress and cancel; falls back to the plugin's built-in job table when the jobs service is absent.

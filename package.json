@@ -1,6 +1,6 @@
 {
   "name": "dsh-openfilm",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "为 DeepSeek Harness 专属打造的 OpenFilm 视频工坊：源自开源项目 OpenFilm，针对 DSH 深度优化——影片写成 film.html，侧栏内嵌 Studio 实时预览与手改，本地渲染导出 MP4；DSH 原生工具、画板指改、后台渲染任务、支持图片与语音的面板对话。",
   "type": "module",
   "exports": {

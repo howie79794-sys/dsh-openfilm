@@ -32,6 +32,12 @@ window.__ModuleLoader__.load({
         projects: '项目',
         noProjects: '还没有影片项目',
         open: '打开',
+        del: '删除',
+        delTitle: '删除这个影片项目？',
+        delNote: '项目文件夹将移入系统废纸篓，随时可以从废纸篓恢复。',
+        delCancel: '取消',
+        delConfirm: '移入废纸篓',
+        delDoing: '删除中…',
         render: '渲染 MP4',
         rendering: '渲染中…',
         cancel: '取消',
@@ -80,6 +86,12 @@ window.__ModuleLoader__.load({
         projects: 'Projects',
         noProjects: 'No film projects yet',
         open: 'Open',
+        del: 'Delete',
+        delTitle: 'Delete this film project?',
+        delNote: 'The project folder moves to your system Trash — recoverable from there anytime.',
+        delCancel: 'Cancel',
+        delConfirm: 'Move to Trash',
+        delDoing: 'Deleting…',
         render: 'Render MP4',
         rendering: 'Rendering…',
         cancel: 'Cancel',
@@ -138,6 +150,14 @@ window.__ModuleLoader__.load({
     const primaryBtn = {
       ...btn, color: 'var(--dsw-alias-accent-text, inherit)',
       borderColor: 'var(--dsw-alias-border-l2, var(--dsw-alias-border-l1))',
+    };
+    const dangerBtn = {
+      ...btn, color: 'var(--dsw-alias-label-danger, #d93025)',
+      borderColor: 'var(--dsw-alias-border-l1)',
+    };
+    const dangerPrimaryBtn = {
+      ...dangerBtn, background: 'var(--dsw-alias-label-danger, #d93025)', color: '#fff',
+      borderColor: 'var(--dsw-alias-label-danger, #d93025)',
     };
 
     async function api(path, options) {
@@ -442,6 +462,9 @@ window.__ModuleLoader__.load({
       const [busy, setBusy] = useState(false);
       const [error, setError] = useState(null);
       const [job, setJob] = useState(null); // jobView
+      const [confirmDel, setConfirmDel] = useState(null); // 待删除的 project
+      const [delBusy, setDelBusy] = useState(false);
+      const [delError, setDelError] = useState(null);
       const jobTimer = useRef(null);
 
       const refresh = useCallback(async () => {
@@ -490,6 +513,16 @@ window.__ModuleLoader__.load({
         catch { /* 下轮轮询会看到终态 */ }
       }
 
+      async function removeProject(project) {
+        setDelBusy(true); setDelError(null);
+        try {
+          await api('/remove', { method: 'POST', body: JSON.stringify({ folder: project.path }) });
+          setConfirmDel(null);
+          await refresh();
+        } catch (e) { setDelError(e.message); }
+        finally { setDelBusy(false); }
+      }
+
       // ── Studio 视图 ──
       if (active) {
         return h('div', { style: { height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', background: 'var(--dsw-alias-bg-base)' } },
@@ -531,7 +564,7 @@ window.__ModuleLoader__.load({
       }
 
       // ── 项目列表视图 ──
-      return h('div', {
+      const listView = h('div', {
         style: { height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', background: 'var(--dsw-alias-bg-base)', color: 'var(--dsw-alias-label-primary)' },
       },
         h('div', {
@@ -606,11 +639,45 @@ window.__ModuleLoader__.load({
                   title: t('openInStudio'),
                   onClick: () => void openFilm(null, project.path),
                 }, t('open')),
+                h('button', {
+                  type: 'button', style: dangerBtn, disabled: busy,
+                  title: t('del'),
+                  onClick: () => { setDelError(null); setConfirmDel(project) },
+                }, t('del')),
               )),
             ) : status.installed ? h('div', { key: 'empty', style: { fontSize: 12, color: 'var(--dsw-alias-label-tertiary)' } }, t('noProjects')) : null,
           ],
         ),
       );
+
+      const modal = confirmDel ? h('div', {
+        role: 'dialog', 'aria-modal': true, 'aria-label': t('delTitle'),
+        style: {
+          position: 'fixed', inset: 0, zIndex: 1000, display: 'grid', placeItems: 'center',
+          background: 'rgba(0,0,0,.35)',
+        },
+        onClick: (event) => { if (event.target === event.currentTarget && !delBusy) setConfirmDel(null) },
+      },
+        h('div', {
+          style: {
+            width: 'min(340px, 84vw)', padding: '16px 18px', borderRadius: 12,
+            background: 'var(--dsw-alias-bg-layer-1)', border: '1px solid var(--dsw-alias-border-l2)',
+            boxShadow: '0 12px 40px rgba(0,0,0,.25)', display: 'flex', flexDirection: 'column', gap: 10,
+          },
+        },
+          h('div', { style: { fontSize: 14, fontWeight: 700 } }, t('delTitle')),
+          h('div', { style: { fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, confirmDel.name),
+          h('div', { style: { fontSize: 11, color: 'var(--dsw-alias-label-tertiary)', wordBreak: 'break-all' } }, confirmDel.path),
+          h('div', { style: { fontSize: 12, color: 'var(--dsw-alias-label-secondary)', lineHeight: 1.5 } }, t('delNote')),
+          delError ? h('div', { style: { fontSize: 11, color: 'var(--dsw-alias-label-danger, #d93025)' } }, delError) : null,
+          h('div', { style: { display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 2 } },
+            h('button', { type: 'button', style: btn, disabled: delBusy, onClick: () => setConfirmDel(null) }, t('delCancel')),
+            h('button', { type: 'button', style: dangerPrimaryBtn, disabled: delBusy, onClick: () => void removeProject(confirmDel) }, delBusy ? t('delDoing') : t('delConfirm')),
+          ),
+        ),
+      ) : null;
+
+      return h(React.Fragment, null, listView, modal);
     }
 
     // ── 对话内卡片：openfilm 工具调用的专属视图 ──────────────
