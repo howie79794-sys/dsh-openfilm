@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "OpenFilm Video Workshop",
-    "description": "OpenFilm AI video making, built specifically for DeepSeek Harness. The agent writes films as film.html; an embedded Studio in the sidebar gives live preview and hand editing; MP4 is rendered locally with ffmpeg. DSH-native extras: openfilm tools with canvas pointing, render jobs in the DSH task panel, tool call cards in chat, and a sidechat that accepts screenshots and voice. Requires the openfilm command (npm i -g openfilm) and ffmpeg on this machine.",
+    "description": "OpenFilm AI video making, built specifically for DeepSeek Harness — enhanced on top of the open-source OpenFilm: the agent writes films as film.html; an embedded Studio in the sidebar gives live preview and hand editing; MP4 is rendered locally with ffmpeg. DSH-exclusive enhancements: openfilm tools with canvas pointing, render jobs in the DSH task panel, tool-call cards in chat, and a sidechat that accepts screenshots and voice. Requires the openfilm command (npm i -g openfilm) and ffmpeg on this machine.",
     "detail": "docs/DETAIL.md"
   }
 }
