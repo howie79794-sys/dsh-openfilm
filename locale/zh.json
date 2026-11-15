@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "OpenFilm 视频工坊",
-    "description": "为 DeepSeek Harness 专属打造的 OpenFilm AI 视频工坊。agent 把影片写成 film.html，侧栏内嵌 Studio 实时预览、随时手改，ffmpeg 本地渲染导出 MP4。DSH 专属增强：openfilm 工具 + 画板指改、渲染进 DSH 后台任务面板、对话内成果卡片、支持截图与语音输入的面板小聊天。需要本机装有 openfilm 命令（npm i -g openfilm）和 ffmpeg。",
+    "description": "为 DeepSeek Harness 专属打造的 OpenFilm AI 视频工坊——在开源项目 OpenFilm 的基础上做了功能增强：agent 把影片写成 film.html，侧栏内嵌 Studio 实时预览、随时手改，ffmpeg 本地渲染导出 MP4；DSH 专属增强有 openfilm 工具 + 画板指改、渲染进 DSH 后台任务面板、对话内成果卡片、支持截图与语音输入的面板小聊天。需要本机装有 openfilm 命令（npm i -g openfilm）和 ffmpeg。",
     "detail": "docs/DETAIL.md"
   }
 }
