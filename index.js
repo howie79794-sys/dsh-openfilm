@@ -761,18 +761,16 @@ export async function apply(ctx, rawConfig) {
     return
   }
 
-  // connection 服务提供 DSH 的请求准入判定；缺失（极老的 profile）时退回路由自己的 Origin 检查。
-  let connectionService = null
-  try {
-    const candidate = ctx.get('connection')
-    if (candidate && typeof candidate.requestRejection === 'function') connectionService = candidate
-  } catch { /* 无 connection 服务 */ }
-  if (!connectionService) ctx.logger?.warn?.('[openfilm] 无 connection 服务：HTTP 路由退回自带 Origin 检查')
+  // connection 服务提供 DSH 的请求准入判定。必须懒取：client-connection 在 await 之后
+  // 才 provide connection（与官方 open-in-app 在 handler 里 Reflect.get 同理），
+  // 装载期取值会拿到 undefined。无 connection 的极老 profile 退回路由自带 Origin 检查。
   /** 未通过准入就作答请求；true 表示已回绝，调用方不再分发。 */
   function requestRejected(req, res) {
-    if (!connectionService) return false
+    let connection
+    try { connection = ctx.get('connection') } catch { return false }
+    if (!connection || typeof connection.requestRejection !== 'function') return false
     let rejection
-    try { rejection = connectionService.requestRejection(req) } catch { rejection = 403 }
+    try { rejection = connection.requestRejection(req) } catch { rejection = 403 }
     if (rejection === undefined) return false
     res.statusCode = rejection
     res.end()
