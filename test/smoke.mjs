@@ -55,6 +55,10 @@ const attachmentsStub = {
   },
 }
 const eventListeners = new Map()
+const connectionStub = {
+  reject: undefined,
+  requestRejection() { return connectionStub.reject },
+}
 
 const ctx = {
   get(name) {
@@ -64,6 +68,7 @@ const ctx = {
     if (name === 'tools') return ctx.tools
     if (name === 'agents') return agentsStub
     if (name === 'attachments') return attachmentsStub
+    if (name === 'connection') return connectionStub
     throw new Error('no service ' + name)
   },
   on(name, listener) {
@@ -130,9 +135,9 @@ function call(method, path, body) {
       },
     }
     const res = {
-      status: 0,
-      writeHead(status) { res.status = status },
-      end(payload) { resolve({ status: res.status, body: JSON.parse(payload || '{}') }) },
+      statusCode: 0,
+      writeHead(status) { res.statusCode = status },
+      end(payload) { resolve({ status: res.statusCode, body: JSON.parse(payload || '{}') }) },
     }
     void route.handler(req, res)
     if (method === 'POST') {
@@ -191,6 +196,20 @@ function call(method, path, body) {
   const miss = await call('POST', '/openfilm/api/remove', { folder: join(dir, 'not-a-project') })
   if (miss.status !== 400 || !/不在项目列表/.test(miss.body.error || '')) throw new Error('remove 未知项目未拦: ' + JSON.stringify(miss.body))
   console.log('✓ remove 守卫：相对路径与列表外路径都拒绝')
+}
+
+// connection 准入：requestRejection 返回 403 时路由必须短路，不分发到任何 handler
+{
+  connectionStub.reject = 403
+  const denied = await call('GET', '/openfilm/api/status')
+  if (denied.status !== 403) throw new Error('准入 403 未短路: ' + denied.status)
+  connectionStub.reject = 401
+  const deniedPost = await call('POST', '/openfilm/api/sidechat/send', { text: 'hi' })
+  if (deniedPost.status !== 401) throw new Error('准入 401 未短路: ' + deniedPost.status)
+  connectionStub.reject = undefined
+  const allowed = await call('GET', '/openfilm/api/sidechat')
+  if (allowed.status !== 200) throw new Error('准入放行失败: ' + allowed.status)
+  console.log('✓ connection 准入：403/401 短路，放行正常')
 }
 
 // remove 渲染中保护：对正在渲染的项目发删除应被拒

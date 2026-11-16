@@ -761,6 +761,24 @@ export async function apply(ctx, rawConfig) {
     return
   }
 
+  // connection 服务提供 DSH 的请求准入判定；缺失（极老的 profile）时退回路由自己的 Origin 检查。
+  let connectionService = null
+  try {
+    const candidate = ctx.get('connection')
+    if (candidate && typeof candidate.requestRejection === 'function') connectionService = candidate
+  } catch { /* 无 connection 服务 */ }
+  if (!connectionService) ctx.logger?.warn?.('[openfilm] 无 connection 服务：HTTP 路由退回自带 Origin 检查')
+  /** 未通过准入就作答请求；true 表示已回绝，调用方不再分发。 */
+  function requestRejected(req, res) {
+    if (!connectionService) return false
+    let rejection
+    try { rejection = connectionService.requestRejection(req) } catch { rejection = 403 }
+    if (rejection === undefined) return false
+    res.statusCode = rejection
+    res.end()
+    return true
+  }
+
   function sendJson(res, status, body) {
     const payload = JSON.stringify(body)
     res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' })
@@ -793,6 +811,9 @@ export async function apply(ctx, rawConfig) {
     kind: 'prefix',
     path: API,
     handler: (req, res) => {
+      // DSH 标准访问准入：webServer.register 的路由宿主不自动做 Host/Origin 检查，
+      // 入口先过 connection.requestRejection（与官方 open-in-app 插件同款），401/403 直接短路。
+      if (requestRejected(req, res)) return
       void (async () => {
         const pathname = new URL(req.url || '/', 'http://127.0.0.1').pathname
         const rest = pathname.slice(API.length).replace(/^\/+/, '').split('?')[0]
